@@ -1,5 +1,17 @@
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = (() => {
+  const configuredURL =
+    import.meta.env.VITE_API_URL?.trim();
+
+  if (configuredURL) {
+    return configuredURL.replace(/\/+$/, "");
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  return "";
+})();
 
 /*
 |--------------------------------------------------------------------------
@@ -9,6 +21,12 @@ const API_URL =
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem("hireflow_token");
+
+  const normalizedEndpoint = endpoint.startsWith("/")
+    ? endpoint
+    : `/${endpoint}`;
+
+  const url = `${API_URL}${normalizedEndpoint}`;
 
   const headers = {
     Accept: "application/json",
@@ -23,12 +41,15 @@ async function request(endpoint, options = {}) {
   let response;
 
   try {
-    response = await fetch(`${API_URL}${endpoint}`, {
+    response = await fetch(url, {
       ...options,
       headers,
     });
   } catch (error) {
-    console.error("API request failed:", error);
+    console.error("API request failed:", {
+      url,
+      error,
+    });
 
     throw new Error(
       "Unable to connect to the HireFlow server."
@@ -36,8 +57,11 @@ async function request(endpoint, options = {}) {
   }
 
   /*
-   * Handle empty responses safely.
-   */
+  |--------------------------------------------------------------------------
+  | RESPONSE PARSING
+  |--------------------------------------------------------------------------
+  */
+
   let data = {};
 
   const contentType =
@@ -48,11 +72,11 @@ async function request(endpoint, options = {}) {
   }
 
   /*
-   * Authentication failure.
-   *
-   * Do not automatically redirect here.
-   * The caller should decide what to do.
-   */
+  |--------------------------------------------------------------------------
+  | AUTHENTICATION FAILURE
+  |--------------------------------------------------------------------------
+  */
+
   if (response.status === 401) {
     throw new Error(
       data?.message ||
@@ -61,8 +85,11 @@ async function request(endpoint, options = {}) {
   }
 
   /*
-   * Other API errors.
-   */
+  |--------------------------------------------------------------------------
+  | OTHER API ERRORS
+  |--------------------------------------------------------------------------
+  */
+
   if (!response.ok) {
     throw new Error(
       data?.message ||
@@ -183,6 +210,7 @@ export const getJob = (id) =>
 export const createJob = (data) =>
   request("/api/jobs", {
     method: "POST",
+
     body: JSON.stringify(data),
   });
 
@@ -192,6 +220,7 @@ export const createJob = (data) =>
 export const updateJob = (id, data) =>
   request(`/api/jobs/${id}`, {
     method: "PATCH",
+
     body: JSON.stringify(data),
   });
 
@@ -201,6 +230,7 @@ export const updateJob = (id, data) =>
 export const updateJobStatus = (id, status) =>
   request(`/api/jobs/${id}/status`, {
     method: "PATCH",
+
     body: JSON.stringify({
       status,
     }),
@@ -361,7 +391,9 @@ export function getStoredUser() {
       error
     );
 
-    localStorage.removeItem("hireflow_user");
+    localStorage.removeItem(
+      "hireflow_user"
+    );
 
     return null;
   }
@@ -414,6 +446,15 @@ export const checkAPI = () =>
 |--------------------------------------------------------------------------
 */
 
+/**
+ * Get resolved API base URL.
+ *
+ * Development:
+ *   VITE_API_URL=http://localhost:3000
+ *
+ * Production:
+ *   Uses current browser origin automatically.
+ */
 export function getAPIUrl() {
   return API_URL;
 }
