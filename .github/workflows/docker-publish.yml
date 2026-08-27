@@ -17,7 +17,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: Arvind1297
+  IMAGE_OWNER: arvind1297
 
 jobs:
   docker:
