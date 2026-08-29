@@ -18,7 +18,11 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: arvind1297
+
+  # GitOps Repository
   GITOPS_REPO: arvind1297/hireflow-gitops
+
+  # GHCR Images
   BACKEND_IMAGE: ghcr.io/arvind1297/hireflow-backend
   FRONTEND_IMAGE: ghcr.io/arvind1297/hireflow-frontend
 
@@ -167,7 +171,7 @@ jobs:
         working-directory: gitops
         run: |
           sed -i -E \
-            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-backend:[^[:space:]]+|\1image: ${{ env.BACKEND_IMAGE }}:${{ needs.docker.outputs.build_tag }}|" \
+            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-backend:[^[:space:]]+|\1image: ghcr.io/manaskosht/hireflow-backend:${{ needs.docker.outputs.build_tag }}|" \
             k8s/backend-deployment.yaml
 
       # ==========================================
@@ -178,7 +182,7 @@ jobs:
         working-directory: gitops
         run: |
           sed -i -E \
-            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-frontend:[^[:space:]]+|\1image: ${{ env.FRONTEND_IMAGE }}:${{ needs.docker.outputs.build_tag }}|" \
+            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-frontend:[^[:space:]]+|\1image: ghcr.io/manaskosht/hireflow-frontend:${{ needs.docker.outputs.build_tag }}|" \
             k8s/frontend-deployment.yaml
 
       # ==========================================
