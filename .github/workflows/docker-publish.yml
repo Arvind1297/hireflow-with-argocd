@@ -22,13 +22,6 @@ env:
   BACKEND_IMAGE: ghcr.io/arvind1297/hireflow-backend
   FRONTEND_IMAGE: ghcr.io/arvind1297/hireflow-frontend
 
-  # GitOps Repository
-  GITOPS_REPO: arvind1297/hireflow-gitops
-
-  # GHCR Images
-  BACKEND_IMAGE: ghcr.io/arvind1297/hireflow-backend
-  FRONTEND_IMAGE: ghcr.io/arvind1297/hireflow-frontend
-
 jobs:
 
   docker:
@@ -67,13 +60,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-<<<<<<< HEAD
-=======
       # ==========================================
       # BACKEND
       # ==========================================
 
->>>>>>> c6d288b (updated-workflow)
       - name: Build and push backend
         uses: docker/build-push-action@v7
         with:
@@ -88,13 +78,10 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
-<<<<<<< HEAD
-=======
       # ==========================================
       # FRONTEND
       # ==========================================
 
->>>>>>> c6d288b (updated-workflow)
       - name: Build and push frontend
         uses: docker/build-push-action@v7
         with:
@@ -112,13 +99,10 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-<<<<<<< HEAD
-=======
       # ==========================================
       # IMAGE SUMMARY
       # ==========================================
 
->>>>>>> c6d288b (updated-workflow)
       - name: Print published images
         run: |
           echo "============================================"
@@ -135,14 +119,11 @@ jobs:
           echo "${{ env.FRONTEND_IMAGE }}:${{ steps.image-tag.outputs.build_tag }}"
           echo "${{ env.FRONTEND_IMAGE }}:${{ steps.image-tag.outputs.sha_tag }}"
 
-<<<<<<< HEAD
-=======
 
   # ============================================
   # GITOPS UPDATE
   # ============================================
 
->>>>>>> c6d288b (updated-workflow)
   update-gitops:
 
     name: Update GitOps Repository
@@ -178,78 +159,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-<<<<<<< HEAD
-      - name: Update backend image
-        run: |
-          sed -i \
-            "s|image: ghcr.io/arvind1297/hireflow-backend:.*|image: ghcr.io/arvind1297/hireflow-backend:${{ needs.docker.outputs.build_tag }}|" \
-            gitops/k8s/backend-deployment.yaml
-
-      - name: Update frontend image
-        run: |
-          sed -i \
-            "s|image: ghcr.io/arvind1297/hireflow-frontend:.*|image: ghcr.io/arvind1297/hireflow-frontend:${{ needs.docker.outputs.build_tag }}|" \
-            gitops/k8s/frontend-deployment.yaml
-
-      - name: Show GitOps changes
-        working-directory: gitops
-        run: |
-          git diff
-
-      - name: Commit GitOps changes
-        working-directory: gitops
-        run: |
-          git add \
-            k8s/backend-deployment.yaml \
-            k8s/frontend-deployment.yaml
-
-          if git diff --cached --quiet; then
-            echo "No GitOps changes detected."
-            echo "CHANGED=false" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          git commit \
-            -m "deploy: build ${{ needs.docker.outputs.build_tag }}"
-
-          echo "CHANGED=true" >> "$GITHUB_ENV"
-
-      - name: Push GitOps changes with retry
-        working-directory: gitops
-        run: |
-          if [ "${CHANGED}" != "true" ]; then
-            echo "Nothing to push."
-            exit 0
-          fi
-
-          for attempt in 1 2 3 4 5; do
-
-            echo "Push attempt ${attempt}/5"
-
-            git fetch origin main
-            git rebase origin/main
-
-            if git push origin HEAD:main; then
-              echo "GitOps repository updated successfully."
-              exit 0
-            fi
-
-            echo "Push failed. Retrying..."
-            sleep $((attempt * 3))
-
-          done
-
-          echo "ERROR: Failed to push GitOps changes after 5 attempts."
-          exit 1
-
-      - name: Deployment summary
-        run: |
-          echo "============================================"
-          echo "GITOPS DEPLOYMENT TRIGGERED"
-          echo "============================================"
-
-          echo ""
-=======
       # ==========================================
       # UPDATE BACKEND IMAGE
       # ==========================================
@@ -258,7 +167,7 @@ jobs:
         working-directory: gitops
         run: |
           sed -i -E \
-            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-backend:[^[:space:]]+|\1image: ghcr.io/manaskosht/hireflow-backend:${{ needs.docker.outputs.build_tag }}|" \
+            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-backend:[^[:space:]]+|\1image: ${{ env.BACKEND_IMAGE }}:${{ needs.docker.outputs.build_tag }}|" \
             k8s/backend-deployment.yaml
 
       # ==========================================
@@ -269,7 +178,7 @@ jobs:
         working-directory: gitops
         run: |
           sed -i -E \
-            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-frontend:[^[:space:]]+|\1image: ghcr.io/manaskosht/hireflow-frontend:${{ needs.docker.outputs.build_tag }}|" \
+            "s|^([[:space:]]*)image:[[:space:]]*ghcr\.io/[^[:space:]]+/hireflow-frontend:[^[:space:]]+|\1image: ${{ env.FRONTEND_IMAGE }}:${{ needs.docker.outputs.build_tag }}|" \
             k8s/frontend-deployment.yaml
 
       # ==========================================
@@ -371,7 +280,6 @@ jobs:
           echo "============================================"
 
           echo ""
->>>>>>> c6d288b (updated-workflow)
           echo "Backend image:"
           echo "${{ env.BACKEND_IMAGE }}:${{ needs.docker.outputs.build_tag }}"
 
